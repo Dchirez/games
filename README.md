@@ -4,7 +4,7 @@ Tous les jeux de [dchirez.fr](https://dchirez.fr) au même endroit : **https://d
 
 Une page autonome (HTML/CSS/JS, sans dépendance ni build) qui réunit les jeux jouables dans le navigateur et ajoute ce qu'un jeu seul n'a pas :
 
-- **Ludothèque** : une carte par jeu avec une capture du jeu en cours de partie (`apercus/`), des filtres (solo, à deux, en ligne, réflexion…) et une recherche.
+- **Ludothèque** : une carte par jeu avec une capture du jeu en cours de partie (`apercus/`) relayée au survol par une animation dessinée en canvas, des filtres (solo, à deux, en ligne, réflexion…) et une recherche.
 - **Jouer sans quitter la salle** : le jeu s'ouvre dans un cadre plein écran (`#jouer=<jeu>`, bouton retour, plein écran, ouverture dans un onglet).
 - **Reprendre** : les parties interrompues (Sudoku, Queens, Échecs) et les derniers jeux ouverts.
 - **Défi du jour** : un Sudoku et un Queens identiques pour tout le monde, tirés de la date, avec une série de jours d'affilée et un résultat à partager façon Wordle.

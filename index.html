@@ -135,6 +135,9 @@
   .apercu .capture { position: absolute; inset: 0; overflow: hidden; }
   .apercu img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-slow) var(--ease-out); }
   .carte-jeu:hover .apercu img, .carte-jeu:focus-within .apercu img { transform: scale(1.05); }
+  .apercu canvas.anim { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out); pointer-events: none; }
+  .apercu canvas.anim.vue { opacity: 1; }
   .apercu .icone { position: absolute; left: 12px; bottom: -22px; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
     font-size: 26px; background: var(--surface-card); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
   .apercu .marque { position: absolute; top: 10px; right: 10px; background: var(--surface-card); box-shadow: var(--shadow-sm); }
@@ -325,7 +328,7 @@
 
   <section class="bloc ds-container" id="jeux" aria-labelledby="tJeux">
     <div class="titre-bloc"><div><div class="ds-eyebrow">Ludothèque</div><h2 id="tJeux">Les jeux</h2>
-      <p>Flèches ou manette pour naviguer, <kbd>Entrée</kbd> pour jouer.</p></div></div>
+      <p>Survolez une carte pour voir le jeu bouger. Flèches ou manette pour naviguer, <kbd>Entrée</kbd> pour jouer.</p></div></div>
     <div class="filtres" role="group" aria-label="Filtrer les jeux">
       <button class="fchip" data-filtre="tous" aria-pressed="true">Tous</button>
       <button class="fchip" data-filtre="solo" aria-pressed="false">Solo</button>
@@ -528,6 +531,7 @@
     const t = reglages.theme === "auto" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : reglages.theme;
     document.documentElement.dataset.theme = t;
     document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#09090b" : "#fafafa";
+    lireCouleurs();
   }
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (reglages.theme === "auto") appliquerTheme(); });
 
@@ -769,7 +773,7 @@
       const recs = g.records ? g.records(f.records) : [];
       const enCours = x.e[g.id];
       return `<article class="carte-jeu" data-id="${g.id}">
-        <div class="apercu"><div class="capture"><img src="apercus/${g.id}.webp" alt="Capture d'écran : ${esc(g.titre)} en cours de partie" width="640" height="360" loading="lazy" decoding="async"></div><span class="icone" aria-hidden="true">${g.icone}</span>
+        <div class="apercu"><div class="capture"><img src="apercus/${g.id}.webp" alt="Capture d'écran : ${esc(g.titre)} en cours de partie" width="640" height="360" loading="lazy" decoding="async"><canvas class="anim" data-anim="${g.id}" aria-hidden="true"></canvas></div><span class="icone" aria-hidden="true">${g.icone}</span>
           ${enCours ? '<span class="marque badge badge-sm badge-accent">en cours</span>' : g.serveur ? '<span class="marque badge badge-sm badge-neutral">serveur dédié</span>' : g.webcam ? '<span class="marque badge badge-sm badge-neutral">webcam</span>' : ""}</div>
         <div class="corps">
           <h3>${esc(g.titre)}</h3>
@@ -1061,6 +1065,256 @@
       // pour que le jeu soit jouable hors connexion avant même sa première ouverture.
       for (const id of HORS_LIGNE) navigator.serviceWorker.register("../" + id + "/sw.js", { scope: "../" + id + "/" }).catch(() => {});
     });
+  }
+
+  /* =====================================================================
+     Animation au survol : un aperçu dessiné en canvas passe en fondu
+     par-dessus la capture. Rien ne tourne tant qu'aucune carte n'est
+     survolée ; sur écran tactile (pas de survol), la capture reste seule.
+     ===================================================================== */
+  let C = {};
+  function lireCouleurs() {
+    const cs = getComputedStyle(document.documentElement);
+    const v = (n) => cs.getPropertyValue(n).trim();
+    C = { fond: v("--surface-sunken"), carte: v("--surface-card"), encre: v("--text-strong"),
+      trait: v("--border-strong"), accent: v("--accent"), violet: v("--accent-2"), sombre: document.documentElement.dataset.theme === "dark" };
+  }
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = (t) => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+  let etatsAnim = {};
+  const ANIM = {
+    chess(g, w, h, t) {
+      const n = 6, m = 4, s = Math.min(w / (n + 1), h / (m + .6)), ox = (w - n * s) / 2, oy = (h - m * s) / 2;
+      for (let y = 0; y < m; y++) for (let x = 0; x < n; x++) {
+        g.fillStyle = (x + y) % 2 ? "#b58863" : "#f0d9b5"; g.fillRect(ox + x * s, oy + y * s, s, s);
+      }
+      const ch = [[1, 2], [2, 0], [4, 1], [3, 3], [1, 2]], k = (t / 1.1) % 4, i = Math.floor(k), f = ease(Math.min(1, (k - i) * 1.6));
+      const a = ch[i], b = ch[i + 1];
+      const x = ox + (lerp(a[0], b[0], f) + .5) * s, y = oy + (lerp(a[1], b[1], f) + .5) * s - Math.sin(f * Math.PI) * s * .45;
+      g.fillStyle = "rgba(234,88,12,.35)"; g.fillRect(ox + b[0] * s, oy + b[1] * s, s, s);
+      g.font = `${s * .82}px serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillStyle = "#18181b"; g.fillText("♚", ox + 5.5 * s, oy + 3.5 * s + s * .04);
+      g.fillStyle = "#fafafa"; g.strokeStyle = "#18181b"; g.lineWidth = 1.2;
+      g.fillText("♞", x, y + s * .04); g.strokeText("♞", x, y + s * .04);
+    },
+    poker(g, w, h, t) {
+      g.fillStyle = "#14532d"; g.beginPath(); g.ellipse(w / 2, h / 2, w * .46, h * .42, 0, 0, 7); g.fill();
+      g.strokeStyle = "#78350f"; g.lineWidth = 6; g.stroke();
+      const cartes = [["A", "♠"], ["K", "♥"], ["Q", "♦"], ["J", "♣"], ["10", "♠"]], cw = w * .12, chh = cw * 1.4, per = 6, p = t % per;
+      cartes.forEach((c, i) => {
+        const x = w / 2 + (i - 2) * cw * 1.18, y = h / 2;
+        const r = Math.max(0, Math.min(1, (p - .3 - i * .45) / .35)), fin = p > per - .6 ? (per - p) / .6 : 1;
+        const sx = Math.abs(Math.cos(r * Math.PI)) * fin, face = r > .5;
+        g.save(); g.translate(x, y); g.scale(Math.max(.02, sx), 1);
+        g.fillStyle = face ? "#fafafa" : "#7c3aed"; g.strokeStyle = "rgba(0,0,0,.35)"; g.lineWidth = 1;
+        g.beginPath(); g.roundRect(-cw / 2, -chh / 2, cw, chh, 4); g.fill(); g.stroke();
+        if (face) {
+          g.fillStyle = c[1] === "♥" || c[1] === "♦" ? "#dc2626" : "#18181b";
+          g.font = `700 ${cw * .42}px 'Space Grotesk', sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+          g.fillText(c[0], 0, -chh * .14); g.font = `${cw * .4}px serif`; g.fillText(c[1], 0, chh * .2);
+        } else { g.strokeStyle = "rgba(255,255,255,.35)"; g.strokeRect(-cw / 2 + 4, -chh / 2 + 4, cw - 8, chh - 8); }
+        g.restore();
+      });
+    },
+    "risk-online"(g, w, h, t) {
+      const pts = [[.14, .3], [.3, .2], [.28, .62], [.5, .42], [.68, .22], [.72, .66], [.88, .4], [.47, .8]];
+      const liens = [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6], [2, 7], [5, 7]];
+      const cols = [C.accent, C.violet, "#16a34a", "#0284c7"];
+      const st = etatsAnim.risk || (etatsAnim.risk = { own: [0, 0, 1, 1, 2, 3, 2, 3], arm: [3, 2, 4, 1, 2, 5, 3, 2], last: 0, att: null });
+      if (t - st.last > .9) {
+        st.last = t;
+        const [a, b] = liens[Math.floor(Math.random() * liens.length)];
+        const [src, dst] = Math.random() < .5 ? [a, b] : [b, a];
+        st.att = [src, dst, t];
+        if (st.own[src] !== st.own[dst] && Math.random() < .6) { st.own[dst] = st.own[src]; st.arm[dst] = 1 + Math.floor(Math.random() * 3); }
+        else st.arm[dst]++;
+      }
+      g.fillStyle = C.sombre ? "#1c1a14" : "#efe6cf"; g.fillRect(0, 0, w, h);
+      g.lineWidth = 2; g.strokeStyle = C.trait;
+      liens.forEach(([a, b]) => { g.beginPath(); g.moveTo(pts[a][0] * w, pts[a][1] * h); g.lineTo(pts[b][0] * w, pts[b][1] * h); g.stroke(); });
+      if (st.att) {
+        const [a, b, t0] = st.att, k = Math.min(1, (t - t0) / .5);
+        g.strokeStyle = cols[st.own[a]]; g.lineWidth = 4; g.beginPath();
+        g.moveTo(pts[a][0] * w, pts[a][1] * h); g.lineTo(lerp(pts[a][0], pts[b][0], k) * w, lerp(pts[a][1], pts[b][1], k) * h); g.stroke();
+      }
+      const r = Math.min(w, h) * .085;
+      pts.forEach((p, i) => {
+        g.fillStyle = cols[st.own[i]]; g.beginPath(); g.arc(p[0] * w, p[1] * h, r, 0, 7); g.fill();
+        g.fillStyle = "#fff"; g.font = `700 ${r}px 'JetBrains Mono', monospace`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(st.arm[i], p[0] * w, p[1] * h + 1);
+      });
+    },
+    bomberman(g, w, h, t) {
+      const cols = 11, rows = 7, s = Math.min(w / cols, h / rows), ox = (w - cols * s) / 2, oy = (h - rows * s) / 2;
+      const p = t % 2.6, cx = 5, cy = 3;
+      const briques = [[3, 3], [5, 1], [7, 3], [5, 5], [2, 1], [8, 5], [1, 4], [9, 2]];
+      g.fillStyle = "#1f2937"; g.fillRect(0, 0, w, h);
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+        const dur = x === 0 || y === 0 || x === cols - 1 || y === rows - 1 || (x % 2 === 0 && y % 2 === 0);
+        g.fillStyle = dur ? "#4b5563" : (x + y) % 2 ? "#2f6b3a" : "#347641";
+        g.fillRect(ox + x * s, oy + y * s, s + .5, s + .5);
+        if (dur) { g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(ox + x * s, oy + y * s, s, s * .18); }
+      }
+      const apres = p >= 1.5, explose = apres && p < 2.2;
+      for (const [x, y] of briques) {
+        const touchee = apres && ((y === cy && Math.abs(x - cx) <= 2) || (x === cx && Math.abs(y - cy) <= 2));
+        if (touchee && p > 1.7) continue;
+        g.fillStyle = "#b45309"; g.fillRect(ox + x * s + 1, oy + y * s + 1, s - 2, s - 2);
+        g.strokeStyle = "#78350f"; g.lineWidth = 1; g.beginPath(); g.moveTo(ox + x * s, oy + y * s + s / 2); g.lineTo(ox + x * s + s, oy + y * s + s / 2); g.stroke();
+      }
+      if (!apres) {
+        const pul = 1 + Math.sin(p * 14) * .08;
+        g.fillStyle = "#111827"; g.beginPath(); g.arc(ox + (cx + .5) * s, oy + (cy + .5) * s, s * .36 * pul, 0, 7); g.fill();
+        g.fillStyle = p % .2 < .1 ? "#f59e0b" : "#ef4444"; g.beginPath(); g.arc(ox + (cx + .78) * s, oy + (cy + .16) * s, s * .1, 0, 7); g.fill();
+      } else if (explose) {
+        const a = 1 - (p - 1.5) / .7;
+        g.fillStyle = `rgba(251,191,36,${a})`;
+        g.fillRect(ox + cx * s, oy + cy * s, s, s);
+        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let k = 1; k <= 2; k++) {
+          const x = cx + dx * k, y = cy + dy * k;
+          if (x % 2 === 0 && y % 2 === 0) break;
+          g.fillRect(ox + x * s + (dy ? s * .15 : 0), oy + y * s + (dx ? s * .15 : 0), dy ? s * .7 : s, dx ? s * .7 : s);
+        }
+        g.fillStyle = `rgba(255,255,255,${a})`; g.beginPath(); g.arc(ox + (cx + .5) * s, oy + (cy + .5) * s, s * .3, 0, 7); g.fill();
+      }
+      // le joueur, à l'abri dans son coin
+      g.fillStyle = "#f5f7fa"; g.beginPath(); g.arc(ox + 1.5 * s, oy + 1.5 * s, s * .32, 0, 7); g.fill();
+      g.fillStyle = "#2979ff"; g.fillRect(ox + 1.25 * s, oy + 1.62 * s, s * .5, s * .22);
+    },
+    queens(g, w, h, t) {
+      const n = 6, sol = [1, 3, 5, 0, 2, 4], s = Math.min(w, h) * .86 / n, ox = (w - n * s) / 2, oy = (h - n * s) / 2;
+      const pal = ["#f9b8b0", "#c4b5fd", "#bbf7d0", "#bfdbfe", "#fbcfe8", "#fde68a"];
+      for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+        let best = 0, bd = 99;
+        sol.forEach((c, r) => { const d = Math.abs(r - y) + Math.abs(c - x) + (r * 7 + c) % 3 * .01; if (d < bd) { bd = d; best = r; } });
+        g.fillStyle = pal[best]; g.fillRect(ox + x * s, oy + y * s, s, s);
+      }
+      g.strokeStyle = "rgba(24,24,27,.25)"; g.lineWidth = 1;
+      for (let i = 0; i <= n; i++) { g.beginPath(); g.moveTo(ox + i * s, oy); g.lineTo(ox + i * s, oy + n * s); g.stroke(); g.beginPath(); g.moveTo(ox, oy + i * s); g.lineTo(ox + n * s, oy + i * s); g.stroke(); }
+      const p = t % 5, nb = Math.min(n, Math.floor(p / .55));
+      g.font = `${s * .62}px serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      for (let r = 0; r < nb; r++) {
+        const fete = p > n * .55 + .3 ? 1 + Math.sin((p - r * .1) * 10) * .08 : 1;
+        g.save(); g.translate(ox + (sol[r] + .5) * s, oy + (r + .5) * s); g.scale(fete, fete);
+        g.fillStyle = "#18181b"; g.fillText("♛", 0, s * .04); g.restore();
+      }
+    },
+    sudoku(g, w, h, t) {
+      const n = 9, s = Math.min(w, h) * .9 / n, ox = (w - n * s) / 2, oy = (h - n * s) / 2;
+      const val = (r, c) => ((r * 3 + Math.floor(r / 3) + c) % 9) + 1;
+      g.fillStyle = C.carte; g.fillRect(ox, oy, n * s, n * s);
+      const rang = etatsAnim.sudoku || (etatsAnim.sudoku = (() => {
+        const rnd = H ? H.alea("apercu") : Math.random, ordre = [];
+        for (let i = 0; i < 81; i++) ordre.push([i, rnd()]);
+        ordre.sort((a, b) => a[1] - b[1]);
+        const r = new Array(81); ordre.forEach(([i], k) => { r[i] = k; });
+        return r;
+      })());
+      const remplis = Math.floor((t % 7) / 7 * 62);
+      g.font = `600 ${s * .62}px 'Space Grotesk', sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+      for (let i = 0; i < 81; i++) {
+        const r = Math.floor(i / 9), c = i % 9, donne = rang[i] < 31, joue = !donne && rang[i] - 31 < remplis;
+        if (!donne && !joue) continue;
+        if (joue && rang[i] - 31 === remplis - 1) { g.fillStyle = C.sombre ? "rgba(124,58,237,.3)" : "rgba(124,58,237,.14)"; g.fillRect(ox + c * s, oy + r * s, s, s); }
+        g.fillStyle = donne ? C.encre : C.violet; g.fillText(val(r, c), ox + (c + .5) * s, oy + (r + .55) * s);
+      }
+      for (let i = 0; i <= n; i++) {
+        g.strokeStyle = i % 3 ? C.trait : C.encre; g.lineWidth = i % 3 ? .6 : 1.6;
+        g.beginPath(); g.moveTo(ox + i * s, oy); g.lineTo(ox + i * s, oy + n * s); g.stroke();
+        g.beginPath(); g.moveTo(ox, oy + i * s); g.lineTo(ox + n * s, oy + i * s); g.stroke();
+      }
+    },
+    "puzzle-cam"(g, w, h, t) {
+      const n = 3, s = Math.min(w * .8, h * .86) / n, ox = (w - n * s) / 2, oy = (h - n * s) / 2;
+      const st = etatsAnim.puzzle || (etatsAnim.puzzle = { perm: [4, 0, 8, 2, 6, 1, 7, 3, 5], last: 0, mv: null, pause: 0 });
+      if (t - st.last > .75) {
+        st.last = t;
+        const faux = st.perm.findIndex((v, i) => v !== i);
+        if (faux < 0) { if (++st.pause > 2) { st.perm = [4, 0, 8, 2, 6, 1, 7, 3, 5]; st.pause = 0; } st.mv = null; }
+        else { const j = st.perm.indexOf(faux); [st.perm[faux], st.perm[j]] = [st.perm[j], st.perm[faux]]; st.mv = [faux, j, t]; }
+      }
+      const peindre = (tuile, x, y) => {
+        const tx = tuile % n, ty = Math.floor(tuile / n);
+        g.save(); g.beginPath(); g.rect(x + 1.5, y + 1.5, s - 3, s - 3); g.clip();
+        g.translate(x - tx * s, y - ty * s);   // l'image entière, vue à travers la case
+        const gr = g.createLinearGradient(0, 0, n * s, n * s); gr.addColorStop(0, "#f97316"); gr.addColorStop(1, "#7c3aed");
+        g.fillStyle = gr; g.fillRect(0, 0, n * s, n * s);
+        g.fillStyle = "rgba(255,255,255,.85)"; g.beginPath(); g.arc(n * s * .62, n * s * .38, s * .55, 0, 7); g.fill();
+        g.fillStyle = "rgba(24,24,27,.55)"; g.beginPath(); g.moveTo(0, n * s); g.lineTo(n * s * .35, n * s * .55); g.lineTo(n * s * .6, n * s * .8); g.lineTo(n * s * .8, n * s * .62); g.lineTo(n * s, n * s); g.fill();
+        g.restore();
+      };
+      g.fillStyle = C.carte; g.fillRect(ox, oy, n * s, n * s);
+      st.perm.forEach((tuile, i) => {
+        let x = ox + (i % n) * s, y = oy + Math.floor(i / n) * s;
+        if (st.mv && (i === st.mv[0] || i === st.mv[1])) {
+          const k = ease(Math.min(1, (t - st.mv[2]) / .4)), autre = i === st.mv[0] ? st.mv[1] : st.mv[0];
+          x = lerp(ox + (autre % n) * s, x, k); y = lerp(oy + Math.floor(autre / n) * s, y, k);
+        }
+        peindre(tuile, x, y);
+      });
+      g.strokeStyle = C.accent; g.lineWidth = 2; g.strokeRect(ox - 4, oy - 4, n * s + 8, n * s + 8);
+    },
+    "jeu-de-la-vie"(g, w, h, t) {
+      const cs = 6, cols = Math.ceil(w / cs), rows = Math.ceil(h / cs);
+      let st = etatsAnim.vie;
+      if (!st || st.cols !== cols || st.rows !== rows) {
+        st = etatsAnim.vie = { cols, rows, a: new Uint8Array(cols * rows), b: new Uint8Array(cols * rows), last: 0, gen: 0 };
+        for (let i = 0; i < st.a.length; i++) st.a[i] = Math.random() < .22 ? 1 : 0;
+      }
+      if (t - st.last > .11) {
+        st.last = t; st.gen++;
+        const { a, b } = st; let vivants = 0;
+        for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+          let nb = 0;
+          for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) nb += a[((y + dy + rows) % rows) * cols + (x + dx + cols) % cols];
+          const v = a[y * cols + x]; b[y * cols + x] = nb === 3 || (v && nb === 2) ? 1 : 0; vivants += b[y * cols + x];
+        }
+        st.a = b; st.b = a;
+        if (vivants < cols * rows * .04 || st.gen > 400) etatsAnim.vie = null;
+      }
+      g.fillStyle = "#fafafa"; g.fillRect(0, 0, w, h);
+      for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) if (st.a[y * cols + x]) {
+        g.fillStyle = (x * 7 + y * 3) % 5 ? "#ea580c" : "#7c3aed";
+        g.fillRect(x * cs + .5, y * cs + .5, cs - 1, cs - 1);
+      }
+    },
+  };
+
+  let animee = null, animRaf = null, animT0 = 0;
+  function dessinerAnim(cv, t) {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+    if (!r.width) return;
+    const W = Math.round(r.width * dpr), Hh = Math.round(r.height * dpr);
+    if (cv.width !== W || cv.height !== Hh) { cv.width = W; cv.height = Hh; }
+    const g = cv.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = C.fond; g.fillRect(0, 0, r.width, r.height);
+    try { ANIM[cv.dataset.anim](g, r.width, r.height, t); } catch (e) { /* un aperçu raté ne doit rien casser */ }
+  }
+  function boucleAnim(now) {
+    if (!animee) { animRaf = null; return; }
+    dessinerAnim(animee, (now - animT0) / 1000);
+    animRaf = requestAnimationFrame(boucleAnim);
+  }
+  function animer(carte) {
+    const cv = carte ? carte.querySelector("canvas.anim") : null;
+    if (cv === animee) return;
+    if (animee) animee.classList.remove("vue");
+    animee = cv;
+    if (!animee) return;
+    etatsAnim = {};                                  // chaque survol repart du début
+    animT0 = performance.now();
+    dessinerAnim(animee, 0);
+    animee.classList.add("vue");
+    if (!animRaf) animRaf = requestAnimationFrame(boucleAnim);
+  }
+  if (matchMedia("(hover: hover)").matches && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const grille = $("grille");
+    grille.addEventListener("mouseover", (e) => animer(e.target.closest(".carte-jeu")));
+    grille.addEventListener("mouseleave", () => { if (!grille.contains(document.activeElement)) animer(null); });
+    grille.addEventListener("focusin", (e) => animer(e.target.closest(".carte-jeu")));
+    grille.addEventListener("focusout", (e) => { if (!grille.contains(e.relatedTarget)) animer(null); });
   }
 
   /* =====================================================================
