@@ -1,0 +1,15 @@
+{
+  "name": "Salle de jeux — dchirez.fr",
+  "short_name": "Jeux",
+  "description": "Les jeux de Damien Chirez : échecs, poker, Risk, Bomberman, Queens, Sudoku, Puzzle Cam, Jeu de la Vie.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

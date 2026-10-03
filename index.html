@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Salle de jeux — dchirez.fr</title>
+<meta name="description" content="Tous les jeux de Damien Chirez au même endroit : échecs, poker, Risk, Bomberman, Queens, Sudoku, Puzzle Cam et Jeu de la Vie. Défi du jour, succès, statistiques et parties en ligne.">
+<meta name="theme-color" content="#09090b">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Salle de jeux — dchirez.fr">
+<meta property="og:description" content="Huit jeux jouables dans le navigateur, un défi du jour, des succès et des parties en ligne entre amis.">
+<meta property="og:url" content="https://dchirez.fr/games/">
+<meta property="og:image" content="https://dchirez.fr/og-image.png">
+<link rel="canonical" href="https://dchirez.fr/games/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="ds.css">
+<script src="pont-hub.js"></script>
+<script>
+  /* Thème appliqué avant le premier rendu, pour éviter un flash clair. */
+  (function () {
+    var t = window.HubJeux ? HubJeux.theme() : null;
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.dataset.theme = t;
+  })();
+</script>
+<style>
+  :root { color-scheme: light; }
+  [data-theme="dark"] { color-scheme: dark; }
+  body { min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: inherit; text-decoration: none; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Navigation ---------- */
+  .nav { position: sticky; top: 0; z-index: 20; height: 64px; display: flex; align-items: center;
+    background: color-mix(in srgb, var(--bg-page) 82%, transparent); backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); }
+  .nav .ds-container { display: flex; align-items: center; gap: 14px; }
+  .brand { display: flex; align-items: baseline; gap: 8px; font-family: var(--font-display); font-weight: 700;
+    font-size: 20px; color: var(--text-strong); letter-spacing: var(--tracking-tight); white-space: nowrap; }
+  .brand small { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: .08em; }
+  .brand .pt { color: var(--accent); }
+  .liens { display: flex; gap: 4px; margin-left: 12px; }
+  .liens a { font-size: 14px; color: var(--text-muted); padding: 8px 10px; border-radius: var(--radius-sm); transition: color var(--dur-fast); }
+  .liens a:hover { color: var(--text-strong); }
+  .nav-droite { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .icon-btn { width: 40px; height: 40px; display: inline-grid; place-items: center; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface-card); color: var(--text-body); font-size: 17px; }
+  .icon-btn:hover { border-color: var(--border-strong); color: var(--text-strong); }
+  .profil-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px 0 4px;
+    border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface-card);
+    color: var(--text-strong); font-weight: 600; font-size: 14px; max-width: 180px; }
+  .profil-btn #pseudoNav { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .avatar { display: block; flex: none; border-radius: 50%; overflow: hidden; }
+  @media (max-width: 900px) { .liens { display: none; } }
+  @media (max-width: 520px) { .brand small { display: none; } #pseudoNav { display: none; } .profil-btn { padding: 0 4px; } }
+
+  /* ---------- En-tête ---------- */
+  .hero { padding-top: 56px; padding-bottom: 28px; }
+  .hero h1 { font-family: var(--font-display); font-size: clamp(40px, 7vw, 72px); line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tighter); color: var(--text-strong); margin: 14px 0 0; }
+  .hero p { max-width: 640px; margin: 16px 0 0; color: var(--text-muted); font-size: var(--text-lg); }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+  .chiffres { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 32px; }
+  .chiffres div { display: flex; flex-direction: column; }
+  .chiffres b { font-family: var(--font-display); font-size: 28px; color: var(--text-strong); line-height: 1; }
+  .chiffres span { font-family: var(--font-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); margin-top: 6px; }
+
+  section.bloc { padding-top: 28px; padding-bottom: 28px; }
+  .titre-bloc { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .titre-bloc h2 { font-family: var(--font-display); font-size: var(--text-2xl); color: var(--text-strong); margin: 6px 0 0; letter-spacing: var(--tracking-tight); }
+  .titre-bloc p { margin: 4px 0 0; color: var(--text-muted); font-size: 14px; }
+
+  /* ---------- Continuer ---------- */
+  .reprendre { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .repr { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--radius-md);
+    background: var(--surface-card); border: 1px solid var(--border); text-align: left; color: var(--text-body);
+    transition: border-color var(--dur-fast), transform var(--dur-fast) var(--ease-out); }
+  .repr:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .repr .ic { font-size: 26px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-sunken); flex: none; }
+  .repr b { display: block; color: var(--text-strong); font-size: 15px; }
+  .repr small { display: block; color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+  .repr .fl { margin-left: auto; color: var(--accent); font-size: 18px; }
+
+  /* ---------- Défi du jour ---------- */
+  .defi { display: grid; grid-template-columns: 1.1fr 1fr 1fr; gap: 14px; }
+  .defi-intro { padding: 22px; border-radius: var(--radius-lg); background: var(--brand-gradient); color: #fff; display: flex; flex-direction: column; gap: 10px; }
+  .defi-intro .ds-eyebrow { color: rgba(255,255,255,.8); }
+  .defi-intro h3 { font-family: var(--font-display); font-size: 26px; margin: 0; line-height: 1.1; }
+  .defi-intro p { margin: 0; font-size: 14px; opacity: .92; }
+  .serie { display: flex; align-items: center; gap: 10px; margin-top: auto; }
+  .serie b { font-family: var(--font-display); font-size: 30px; line-height: 1; }
+  .calendrier { display: flex; gap: 4px; }
+  .calendrier i { width: 12px; height: 12px; border-radius: 3px; background: rgba(255,255,255,.22); }
+  .calendrier i.ok { background: #fff; }
+  .calendrier i.demi { background: rgba(255,255,255,.6); }
+  .defi-intro .btn { align-self: flex-start; background: rgba(255,255,255,.16); color: #fff; border-color: rgba(255,255,255,.4); }
+  .defi-intro .btn:hover { background: rgba(255,255,255,.26); }
+  .defi-jeu { padding: 20px; border-radius: var(--radius-lg); background: var(--surface-card); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 8px; }
+  .defi-jeu .tete { display: flex; align-items: center; gap: 10px; }
+  .defi-jeu .tete span { font-size: 26px; }
+  .defi-jeu h4 { margin: 0; font-family: var(--font-display); font-size: 19px; color: var(--text-strong); }
+  .defi-jeu p { margin: 0; color: var(--text-muted); font-size: 13px; }
+  .etat-defi { font-family: var(--font-mono); font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); background: var(--surface-sunken); color: var(--text-body); }
+  .etat-defi.ok { background: rgba(22,163,74,.12); color: var(--green-500); }
+  .etat-defi.ko { background: rgba(220,38,38,.1); color: var(--red-500); }
+  .defi-jeu .btn { margin-top: auto; }
+  @media (max-width: 860px) { .defi { grid-template-columns: 1fr 1fr; } .defi-intro { grid-column: 1 / -1; } }
+  @media (max-width: 520px) { .defi { grid-template-columns: 1fr; } }
+
+  /* ---------- Filtres ---------- */
+  .filtres { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .fchip { cursor: pointer; border: 1px solid var(--border); background: var(--surface-card); color: var(--text-muted);
+    border-radius: var(--radius-pill); padding: 7px 13px; transition: all var(--dur-fast); }
+  .fchip[aria-pressed="true"] { background: var(--text-strong); color: var(--bg-page); border-color: var(--text-strong); }
+  .recherche { margin-left: auto; position: relative; }
+  .recherche input { height: 38px; width: 220px; border-radius: var(--radius-pill); border: 1px solid var(--border);
+    background: var(--surface-card); color: var(--text-strong); padding: 0 14px 0 34px; font: inherit; font-size: 14px; }
+  .recherche::before { content: "⌕"; position: absolute; left: 13px; top: 50%; transform: translateY(-52%); color: var(--text-muted); font-size: 17px; }
+  @media (max-width: 640px) { .recherche { margin-left: 0; width: 100%; } .recherche input { width: 100%; } }
+
+  /* ---------- Cartes de jeu ---------- */
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 16px; margin-top: 18px; }
+  .carte-jeu { position: relative; display: flex; flex-direction: column; border-radius: var(--radius-lg); overflow: hidden;
+    background: var(--surface-card); border: 1px solid var(--border); text-align: left; color: var(--text-body); padding: 0;
+    transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base), border-color var(--dur-fast); }
+  .carte-jeu:hover, .carte-jeu:focus-within { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--border-strong); }
+  .apercu { position: relative; aspect-ratio: 16 / 9; background: var(--surface-sunken); border-bottom: 1px solid var(--border); }
+  .apercu .capture { position: absolute; inset: 0; overflow: hidden; }
+  .apercu img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-slow) var(--ease-out); }
+  .carte-jeu:hover .apercu img, .carte-jeu:focus-within .apercu img { transform: scale(1.05); }
+  .apercu .icone { position: absolute; left: 12px; bottom: -22px; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+    font-size: 26px; background: var(--surface-card); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+  .apercu .marque { position: absolute; top: 10px; right: 10px; background: var(--surface-card); box-shadow: var(--shadow-sm); }
+  .apercu .marque.badge-accent { background: var(--accent); color: var(--accent-on); }
+  .corps { padding: 30px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .corps h3 { margin: 0; font-family: var(--font-display); font-size: 20px; color: var(--text-strong); letter-spacing: var(--tracking-tight); }
+  .corps p { margin: 0; font-size: 14px; color: var(--text-muted); }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .stat-jeu { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); margin-top: auto; padding-top: 6px; }
+  .stat-jeu b { color: var(--text-strong); font-weight: 600; }
+  .actions-jeu { display: flex; gap: 8px; margin-top: 8px; }
+  .actions-jeu .btn-jouer { flex: 1; }
+  .badge-accent { background: var(--accent-soft); color: var(--accent); }
+  .badge-violet { background: var(--accent-2-soft); color: var(--accent-2); }
+  .vide { padding: 40px; text-align: center; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: var(--radius-lg); grid-column: 1 / -1; }
+
+  /* ---------- Salon ---------- */
+  .salon { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .panneau { min-width: 0; padding: 20px; border-radius: var(--radius-lg); background: var(--surface-card); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+  .panneau h3 { margin: 0; font-family: var(--font-display); font-size: 19px; color: var(--text-strong); display: flex; align-items: center; gap: 8px; }
+  .panneau p { margin: 0; font-size: 14px; color: var(--text-muted); }
+  .champ { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-muted); }
+  .champ select, .champ input, .entree { height: 42px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+    background: var(--surface-sunken); color: var(--text-strong); padding: 0 12px; font: inherit; font-size: 15px; }
+  .rangee { display: flex; gap: 8px; }
+  .rangee > * { flex: 1; min-width: 0; }
+  .invitation { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 14px; border-radius: var(--radius-md); background: var(--surface-sunken); }
+  .invitation .inv-texte { flex: 1 1 190px; min-width: 0; }
+  .qr { width: 132px; height: 132px; flex: none; background: #fff; border-radius: 10px; padding: 6px; display: grid; place-items: center; }
+  .qr svg, .qr img { width: 100%; height: 100%; display: block; }
+  .invitation .code { font-family: var(--font-mono); font-size: 26px; font-weight: 700; letter-spacing: .12em; color: var(--text-strong); }
+  .invitation small { display: block; color: var(--text-muted); font-size: 12px; word-break: break-all; }
+  .invitation .rangee { margin-top: 10px; flex-wrap: wrap; }
+  .invitation .rangee > * { flex: 1 1 auto; white-space: nowrap; }
+  @media (max-width: 960px) { .salon { grid-template-columns: 1fr; } }
+
+  /* ---------- Statistiques ---------- */
+  .stats-grille { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; }
+  .tableau { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tableau th { text-align: left; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--text-muted); padding: 0 10px 10px; border-bottom: 1px solid var(--border); }
+  .tableau td { padding: 11px 10px; border-bottom: 1px solid var(--border); color: var(--text-body); vertical-align: top; }
+  .tableau td:first-child { color: var(--text-strong); font-weight: 600; white-space: nowrap; }
+  .tableau td.num { font-family: var(--font-mono); text-align: right; white-space: nowrap; }
+  .tableau th.num { text-align: right; }
+  .tableau .rec { font-size: 12px; color: var(--text-muted); }
+  .defile { overflow-x: auto; }
+  .activite { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-height: 420px; overflow: auto; }
+  .activite li { display: flex; gap: 10px; align-items: center; padding: 8px 4px; font-size: 14px; border-bottom: 1px solid var(--border); }
+  .activite .pastille { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--text-faint); }
+  .activite .victoire .pastille { background: var(--green-500); }
+  .activite .defaite .pastille { background: var(--red-500); }
+  .activite .nulle .pastille { background: var(--amber-500); }
+  .activite time { margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  @media (max-width: 860px) { .stats-grille { grid-template-columns: 1fr; } }
+
+  /* ---------- Succès ---------- */
+  .progression { height: 8px; border-radius: 99px; background: var(--surface-sunken); overflow: hidden; width: 220px; }
+  .progression i { display: block; height: 100%; background: var(--brand-gradient); border-radius: 99px; transition: width var(--dur-slow) var(--ease-out); }
+  .succes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+  .badge-succes { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: var(--radius-md);
+    background: var(--surface-card); border: 1px solid var(--border); }
+  .badge-succes .med { width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 20px;
+    background: var(--surface-sunken); filter: grayscale(1); opacity: .45; }
+  .badge-succes.obtenu .med { background: var(--accent-soft); filter: none; opacity: 1; box-shadow: inset 0 0 0 2px var(--accent); }
+  .badge-succes b { display: block; font-size: 14px; color: var(--text-strong); }
+  .badge-succes small { display: block; font-size: 12px; color: var(--text-muted); line-height: 1.35; }
+  .badge-succes:not(.obtenu) b { color: var(--text-muted); }
+
+  /* ---------- Hors navigateur ---------- */
+  .hors { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+  .hors a { display: flex; gap: 12px; align-items: center; padding: 14px; border-radius: var(--radius-md);
+    background: var(--surface-card); border: 1px solid var(--border); transition: border-color var(--dur-fast); }
+  .hors a:hover { border-color: var(--accent); }
+  .hors .ic { font-size: 24px; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-sunken); flex: none; }
+  .hors b { display: block; color: var(--text-strong); font-size: 15px; }
+  .hors small { display: block; color: var(--text-muted); font-size: 12px; }
+  .hors code { font-size: 11px; }
+
+  footer.pied { margin-top: auto; border-top: 1px solid var(--border); padding: 28px 0; font-size: 13px; color: var(--text-muted); }
+  footer.pied .ds-container { display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  footer.pied a:hover { color: var(--accent); }
+  kbd { font-family: var(--font-mono); font-size: 11px; padding: 2px 6px; border-radius: 5px; border: 1px solid var(--border-strong); background: var(--surface-sunken); }
+
+  /* ---------- Lecteur (jeu dans le hub) ---------- */
+  .lecteur { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; background: var(--bg-page); }
+  .lecteur-barre { height: 48px; flex: none; display: flex; align-items: center; gap: 8px; padding: 0 10px;
+    border-bottom: 1px solid var(--border); background: var(--surface-card); }
+  .lecteur-barre .titre { font-family: var(--font-display); font-weight: 600; color: var(--text-strong); display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .lecteur-barre .titre span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lecteur-barre .droite { margin-left: auto; display: flex; gap: 6px; }
+  .lecteur-barre .icon-btn { width: 36px; height: 36px; font-size: 15px; }
+  .retour { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: transparent; color: var(--text-body); font-weight: 600; font-size: 14px; }
+  .retour:hover { color: var(--text-strong); border-color: var(--border-strong); }
+  .lecteur iframe { flex: 1; width: 100%; border: 0; background: var(--bg-page); }
+
+  /* ---------- Dialogues ---------- */
+  dialog { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-card); color: var(--text-body);
+    padding: 0; width: min(460px, calc(100vw - 32px)); box-shadow: var(--shadow-lg); }
+  dialog::backdrop { background: rgba(9, 9, 11, .55); backdrop-filter: blur(3px); }
+  .dlg { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .dlg h2 { margin: 0; font-family: var(--font-display); font-size: 22px; color: var(--text-strong); }
+  .dlg .pied-dlg { display: flex; gap: 8px; justify-content: flex-end; }
+  .avatar-choix { display: flex; align-items: center; gap: 16px; }
+  .couleurs { display: flex; flex-wrap: wrap; gap: 8px; }
+  .couleurs button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; padding: 0; }
+  .couleurs button[aria-pressed="true"] { border-color: var(--text-strong); box-shadow: 0 0 0 2px var(--surface-card) inset; }
+  .segment { display: flex; padding: 3px; border-radius: var(--radius-sm); background: var(--surface-sunken); gap: 3px; }
+  .segment button { flex: 1; height: 34px; border: 0; border-radius: 6px; background: transparent; color: var(--text-muted); font: inherit; font-size: 13px; font-weight: 600; }
+  .segment button[aria-pressed="true"] { background: var(--surface-card); color: var(--text-strong); box-shadow: var(--shadow-xs); }
+  .reglage { display: flex; flex-direction: column; gap: 8px; }
+  .reglage > span { font-size: 13px; color: var(--text-muted); }
+  .aide { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; z-index: 80; pointer-events: none;
+    background: var(--text-strong); color: var(--bg-page); padding: 12px 18px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600;
+    box-shadow: var(--shadow-lg); transition: all var(--dur-base) var(--ease-out); max-width: calc(100vw - 32px); text-align: center; }
+  .toast.vu { opacity: 1; transform: translate(-50%, 0); }
+  .manette { position: fixed; right: 16px; bottom: 16px; z-index: 30; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);
+    background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 6px 12px; box-shadow: var(--shadow-sm); }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Navigation principale">
+  <div class="ds-container">
+    <a class="brand" href="./" aria-label="Salle de jeux, accueil">Jeux<span class="pt">.</span><small>dchirez.fr</small></a>
+    <div class="liens">
+      <a href="#jeux">Jeux</a>
+      <a href="#defi">Défi du jour</a>
+      <a href="#salon">En ligne</a>
+      <a href="#stats">Statistiques</a>
+      <a href="#succes">Succès</a>
+    </div>
+    <div class="nav-droite">
+      <button class="icon-btn" id="btnHasard" title="Surprends-moi : un jeu au hasard (Y à la manette)" aria-label="Lancer un jeu au hasard" data-nav>🎲</button>
+      <button class="icon-btn" id="btnReglages" title="Réglages" aria-label="Réglages" data-nav>⚙</button>
+      <button class="profil-btn" id="btnProfil" aria-label="Profil de joueur" data-nav><span class="avatar" id="avatarNav"></span><span id="pseudoNav">Profil</span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <header class="hero ds-container">
+    <div class="ds-eyebrow">dchirez.fr — salle de jeux</div>
+    <h1>Tous mes jeux,<br><span class="ds-gradient-text">au même endroit.</span></h1>
+    <p>Huit jeux qui tournent dans le navigateur, sans compte ni installation. Votre progression reste dans ce navigateur : succès, records, parties en cours.</p>
+    <div class="hero-actions">
+      <a class="btn btn-gradient btn-md" href="#jeux" data-nav>Voir les jeux</a>
+      <button class="btn btn-secondary btn-md" id="btnHasard2" data-nav>🎲 Surprends-moi</button>
+    </div>
+    <div class="chiffres" id="chiffres"></div>
+  </header>
+
+  <section class="bloc ds-container" id="blocReprendre" hidden aria-labelledby="tReprendre">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Reprendre</div><h2 id="tReprendre">Là où vous vous étiez arrêté</h2></div></div>
+    <div class="reprendre" id="reprendre"></div>
+  </section>
+
+  <section class="bloc ds-container" id="defi" aria-labelledby="tDefi">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Chaque jour</div><h2 id="tDefi">Défi du jour</h2>
+      <p>La même grille pour tout le monde, renouvelée à minuit.</p></div></div>
+    <div class="defi">
+      <div class="defi-intro">
+        <div class="ds-eyebrow" id="dateDefi"></div>
+        <h3>Un sudoku, un Queens.<br>Une seule grille chacun.</h3>
+        <p>Comparez votre temps avec vos amis : le résultat se partage sans dévoiler la solution.</p>
+        <div class="serie"><b id="serieN">0</b><div><div style="font-size:13px;font-weight:600">jour<span id="serieS">s</span> d'affilée</div><div class="calendrier" id="calendrier" aria-hidden="true"></div></div></div>
+        <button class="btn btn-sm" id="btnPartager" data-nav>Partager mon résultat</button>
+      </div>
+      <div class="defi-jeu">
+        <div class="tete"><span>🔢</span><h4>Sudoku</h4></div>
+        <p>Niveau Moyen · 3 vies</p>
+        <div class="etat-defi" id="etatSudoku">À faire</div>
+        <button class="btn btn-primary btn-md" data-defi="sudoku" data-nav>Jouer le défi</button>
+      </div>
+      <div class="defi-jeu">
+        <div class="tete"><span>👑</span><h4>Queens</h4></div>
+        <p>Grille 9×9 · solution unique</p>
+        <div class="etat-defi" id="etatQueens">À faire</div>
+        <button class="btn btn-primary btn-md" data-defi="queens" data-nav>Jouer le défi</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloc ds-container" id="jeux" aria-labelledby="tJeux">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Ludothèque</div><h2 id="tJeux">Les jeux</h2>
+      <p>Flèches ou manette pour naviguer, <kbd>Entrée</kbd> pour jouer.</p></div></div>
+    <div class="filtres" role="group" aria-label="Filtrer les jeux">
+      <button class="fchip" data-filtre="tous" aria-pressed="true">Tous</button>
+      <button class="fchip" data-filtre="solo" aria-pressed="false">Solo</button>
+      <button class="fchip" data-filtre="local" aria-pressed="false">À deux, même écran</button>
+      <button class="fchip" data-filtre="ligne" aria-pressed="false">En ligne</button>
+      <button class="fchip" data-filtre="reflexion" aria-pressed="false">Réflexion</button>
+      <button class="fchip" data-filtre="arcade" aria-pressed="false">Arcade</button>
+      <button class="fchip" data-filtre="experience" aria-pressed="false">Expériences</button>
+      <label class="recherche"><span class="sr">Rechercher un jeu</span><input type="search" id="recherche" placeholder="Rechercher…" autocomplete="off"></label>
+    </div>
+    <div class="grille" id="grille"></div>
+  </section>
+
+  <section class="bloc ds-container" id="salon" aria-labelledby="tSalon">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Entre amis</div><h2 id="tSalon">Jouer en ligne</h2>
+      <p>Créez une partie, envoyez le lien ou faites scanner le QR code. Les échanges se font de navigateur à navigateur.</p></div></div>
+    <div class="salon">
+      <div class="panneau">
+        <h3>♟️ Partie d'échecs</h3>
+        <div class="rangee">
+          <label class="champ">Votre couleur
+            <select id="ecCouleur"><option value="r">Au hasard</option><option value="w">Blancs</option><option value="b">Noirs</option></select></label>
+          <label class="champ">Cadence
+            <select id="ecCadence"><option value="none">Sans pendule</option><option value="3+2">3 + 2</option><option value="5+0">5 min</option><option value="10+0" selected>10 min</option><option value="15+10">15 + 10</option></select></label>
+        </div>
+        <button class="btn btn-primary btn-md" id="creerEchecs" data-nav>Créer la partie</button>
+        <div class="invitation" id="invEchecs" hidden></div>
+      </div>
+      <div class="panneau">
+        <h3>🃏 Table de poker</h3>
+        <p>Texas Hold'em jusqu'à six. Vous ouvrez la table, vos amis la rejoignent avec le code. Des bots peuvent compléter.</p>
+        <button class="btn btn-primary btn-md" id="creerPoker" data-nav>Ouvrir une table</button>
+        <div class="invitation" id="invPoker" hidden></div>
+      </div>
+      <div class="panneau">
+        <h3>🔗 Rejoindre une partie</h3>
+        <p>On vous a donné un code ? Choisissez le jeu et entrez-le.</p>
+        <div class="rangee">
+          <label class="champ">Jeu
+            <select id="rjJeu"><option value="chess">Échecs</option><option value="poker">Poker</option></select></label>
+          <label class="champ">Code
+            <input id="rjCode" autocomplete="off" spellcheck="false" maxlength="16" placeholder="ex. K7M2Q"></label>
+        </div>
+        <button class="btn btn-secondary btn-md" id="btnRejoindre" data-nav>Rejoindre</button>
+        <p class="aide">Risk en ligne a son propre serveur de parties : on crée et rejoint les salons directement <a href="../risk-online/" style="color:var(--accent)">dans le jeu</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloc ds-container" id="stats" aria-labelledby="tStats">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Progression</div><h2 id="tStats">Statistiques</h2>
+      <p>Enregistrées dans ce navigateur uniquement.</p></div>
+      <button class="btn btn-ghost btn-sm" id="btnExporter" data-nav>Exporter mes données</button></div>
+    <div class="stats-grille">
+      <div class="panneau defile"><table class="tableau" id="tableau"></table></div>
+      <div class="panneau"><h3>Activité récente</h3><ul class="activite" id="activite"></ul></div>
+    </div>
+  </section>
+
+  <section class="bloc ds-container" id="succes" aria-labelledby="tSucces">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">Collection</div><h2 id="tSucces">Succès</h2>
+      <p id="succesResume"></p></div>
+      <div class="progression" aria-hidden="true"><i id="succesBarre" style="width:0"></i></div></div>
+    <div class="succes" id="listeSucces"></div>
+  </section>
+
+  <section class="bloc ds-container" id="hors" aria-labelledby="tHors">
+    <div class="titre-bloc"><div><div class="ds-eyebrow">À télécharger</div><h2 id="tHors">Hors navigateur</h2>
+      <p>Des jeux écrits en Java ou en C, à compiler ou lancer sur votre machine.</p></div></div>
+    <div class="hors" id="listeHors"></div>
+  </section>
+</main>
+
+<footer class="pied">
+  <div class="ds-container">
+    <span>© dchirez.fr — <a href="../">retour au portfolio</a></span>
+    <span><kbd>←↑→↓</kbd> naviguer · <kbd>Entrée</kbd> jouer · <kbd>Échap</kbd> revenir au hub</span>
+  </div>
+</footer>
+
+<!-- Jeu ouvert dans le hub -->
+<div class="lecteur" id="lecteur" hidden>
+  <div class="lecteur-barre">
+    <button class="retour" id="lecteurRetour" title="Revenir au hub (Échap)">← Hub</button>
+    <div class="titre"><span id="lecteurIcone"></span><span id="lecteurTitre"></span></div>
+    <div class="droite">
+      <button class="icon-btn" id="lecteurPlein" title="Plein écran" aria-label="Plein écran">⛶</button>
+      <a class="icon-btn" id="lecteurOnglet" title="Ouvrir dans un nouvel onglet" aria-label="Ouvrir dans un nouvel onglet" target="_blank" rel="noopener">↗</a>
+    </div>
+  </div>
+  <iframe id="cadre" title="Jeu" allow="camera; microphone; fullscreen; autoplay; clipboard-write; web-share; gamepad"></iframe>
+</div>
+
+<dialog id="dlgProfil" aria-labelledby="tProfil">
+  <form class="dlg" method="dialog" id="formProfil">
+    <h2 id="tProfil">Profil de joueur</h2>
+    <div class="avatar-choix">
+      <span class="avatar" id="avatarApercu"></span>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="couleurs" id="couleurs" role="group" aria-label="Couleur de l'avatar"></div>
+        <button type="button" class="btn btn-secondary btn-sm" id="btnMotif">↻ Autre motif</button>
+      </div>
+    </div>
+    <label class="champ">Pseudo
+      <input class="entree" id="saisiePseudo" maxlength="20" autocomplete="nickname" placeholder="Votre pseudo"></label>
+    <p class="aide">Le pseudo est repris par le poker. Il ne quitte ce navigateur que lorsque vous rejoignez une table.</p>
+    <div class="pied-dlg">
+      <button class="btn btn-ghost btn-sm" value="annuler" formnovalidate>Annuler</button>
+      <button class="btn btn-primary btn-sm" value="ok" id="btnEnregistrerProfil">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgReglages" aria-labelledby="tReglages">
+  <form class="dlg" method="dialog">
+    <h2 id="tReglages">Réglages</h2>
+    <div class="reglage"><span>Thème (hub, Sudoku, Queens, Poker)</span>
+      <div class="segment" data-reglage="theme">
+        <button type="button" data-v="auto">Système</button><button type="button" data-v="light">Clair</button><button type="button" data-v="dark">Sombre</button>
+      </div></div>
+    <div class="reglage"><span>Son des jeux au lancement</span>
+      <div class="segment" data-reglage="son">
+        <button type="button" data-v="1">Activé</button><button type="button" data-v="0">Coupé</button>
+      </div></div>
+    <div class="reglage"><span>Ouvrir les jeux</span>
+      <div class="segment" data-reglage="ouverture">
+        <button type="button" data-v="hub">Dans le hub</button><button type="button" data-v="onglet">Dans la page</button>
+      </div></div>
+    <p class="aide" id="etatHorsLigne">Mode hors ligne : vérification…</p>
+    <div class="pied-dlg">
+      <button class="btn btn-ghost btn-sm" type="button" id="btnEffacer">Effacer ma progression</button>
+      <button class="btn btn-primary btn-sm" value="ok">Fermer</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="manette" id="indicManette" hidden>🎮 Manette connectée · A jouer · B retour · Y hasard</div>
+
+<script>
+(function () {
+  "use strict";
+  const H = window.HubJeux;
+  const $ = (id) => document.getElementById(id);
+  const P = "dchirez-hub:";
+  const lire = (k, d) => { try { const v = localStorage.getItem(P + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+  const ecrire = (k, v) => { try { localStorage.setItem(P + k, JSON.stringify(v)); } catch (e) { /* rien */ } };
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const mmss = (s) => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+
+  /* =====================================================================
+     Catalogue
+     ===================================================================== */
+  const SUDOKU_NIV = ["Facile", "Moyen", "Difficile", "Expert", "Extrême"];
+  const JEUX = [
+    { id: "chess", titre: "Échecs", icone: "♟️", desc: "Contre l'ordinateur (6 niveaux), à deux sur le même écran ou en ligne par lien.",
+      tags: ["solo", "local", "ligne", "reflexion"], unite: ["partie", "parties"],
+      records: (r) => r["niveau-ia"] ? ["IA battue jusqu'au niveau " + r["niveau-ia"] + "/6"] : [] },
+    { id: "poker", titre: "Poker", icone: "🃏", desc: "Texas Hold'em à six, en pair-à-pair via un code de table, avec bots.",
+      tags: ["ligne", "cartes"], unite: ["main", "mains"], victoire: ["pot gagné", "pots gagnés"],
+      records: (r) => r.pot ? ["Plus gros pot : " + r.pot.toLocaleString("fr-FR")] : [] },
+    { id: "risk-online", titre: "Risk en ligne", icone: "🎲", desc: "Le jeu de conquête, de 5 à 7 joueurs humains ou bots, sur un serveur dédié.",
+      tags: ["ligne", "strategie"], serveur: true },
+    { id: "bomberman", titre: "Bomberman", icone: "💣", desc: "Campagne solo de 8 niveaux et duel local à deux. Aucune image, tout est dessiné.",
+      tags: ["solo", "local", "arcade"], unite: ["partie", "parties"],
+      records: (r) => [r.niveau ? "Niveau " + r.niveau + "/8" : "", r.score ? "Score " + r.score.toLocaleString("fr-FR") : ""].filter(Boolean) },
+    { id: "queens", titre: "Queens", icone: "👑", desc: "Une reine par ligne, par colonne et par couleur. Grilles à solution unique.",
+      tags: ["solo", "reflexion"], unite: ["grille", "grilles"], victoire: ["résolue", "résolues"],
+      records: (r) => [8, 9, 10].filter((n) => r["temps-" + n] != null).map((n) => n + "×" + n + " " + mmss(r["temps-" + n] / 1000)) },
+    { id: "sudoku", titre: "Sudoku", icone: "🔢", desc: "Cinq niveaux, trois vies, des grilles générées à la volée et à solution unique.",
+      tags: ["solo", "reflexion"], unite: ["grille", "grilles"], victoire: ["résolue", "résolues"],
+      records: (r) => SUDOKU_NIV.map((n, i) => r["temps-" + i] != null ? n + " " + mmss(r["temps-" + i]) : "").filter(Boolean) },
+    { id: "puzzle-cam", titre: "Puzzle Cam", icone: "🧩", desc: "Un puzzle de votre propre image webcam, manipulé aux gestes de la main.",
+      tags: ["solo", "experience"], unite: ["puzzle", "puzzles"], victoire: ["terminé", "terminés"], webcam: true,
+      records: (r) => r.taille ? ["Jusqu'à " + r.taille + "×" + r.taille] : [] },
+    { id: "jeu-de-la-vie", titre: "Jeu de la Vie", icone: "🧬", desc: "L'automate cellulaire de Conway : dessinez des cellules et regardez-les évoluer.",
+      tags: ["experience"], unite: null,
+      records: (r) => r.generations ? ["Record : " + r.generations.toLocaleString("fr-FR") + " générations"] : [] },
+  ];
+  const PAR_ID = Object.fromEntries(JEUX.map((j) => [j.id, j]));
+  const LIB_TAG = { solo: "Solo", local: "2 joueurs", ligne: "En ligne", reflexion: "Réflexion", arcade: "Arcade",
+    experience: "Expérience", cartes: "Cartes", strategie: "Stratégie" };
+
+  const HORS = [
+    { titre: "Bomberman (JavaFX)", icone: "💣", desc: "Version bureau, même moteur", info: "mvn javafx:run", url: "https://github.com/Dchirez/bomberman-javafx" },
+    { titre: "Pac-Man", icone: "🟡", desc: "Java / JavaFX, projet d'équipe en patrons de conception", info: "projet universitaire" },
+    { titre: "Démineur", icone: "💥", desc: "En C, génération de grille et déminage", info: "gcc", url: "https://github.com/Dchirez/Demineur-C" },
+    { titre: "Bataille navale", icone: "🚢", desc: "En C, contre une IA", info: "gcc", url: "https://github.com/Dchirez/Bataille-Navale-C" },
+    { titre: "Quiz culture G", icone: "❓", desc: "En C, questions-réponses en console", info: "gcc", url: "https://github.com/Dchirez/Quizz-Culture-G-C" },
+    { titre: "Juste Prix", icone: "💰", desc: "En C, le concept télévisé", info: "gcc", url: "https://github.com/Dchirez/Juste-Prix-C" },
+  ];
+
+  /* =====================================================================
+     Réglages, thème
+     ===================================================================== */
+  const DEF_REGLAGES = { theme: "auto", son: true, ouverture: "hub" };
+  let reglages = Object.assign({}, DEF_REGLAGES, lire("reglages", {}));
+
+  function appliquerTheme() {
+    const t = reglages.theme === "auto" ? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : reglages.theme;
+    document.documentElement.dataset.theme = t;
+    document.querySelector('meta[name="theme-color"]').content = t === "dark" ? "#09090b" : "#fafafa";
+  }
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (reglages.theme === "auto") appliquerTheme(); });
+
+  function majSegments() {
+    document.querySelectorAll(".segment").forEach((seg) => {
+      const k = seg.dataset.reglage;
+      const v = k === "son" ? (reglages.son ? "1" : "0") : reglages[k];
+      seg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === v)));
+    });
+  }
+  document.querySelectorAll(".segment").forEach((seg) => seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const k = seg.dataset.reglage;
+    reglages[k] = k === "son" ? b.dataset.v === "1" : b.dataset.v;
+    ecrire("reglages", reglages);
+    majSegments();
+    if (k === "theme") appliquerTheme();
+  }));
+
+  /* =====================================================================
+     Profil et avatar
+     ===================================================================== */
+  const COULEURS = ["#ea580c", "#7c3aed", "#16a34a", "#0284c7", "#db2777", "#ca8a04", "#0d9488", "#52525b"];
+  let profil = lire("profil", null);
+
+  /* Avatar : motif 5×5 symétrique tiré du pseudo et d'une graine, comme une signature. */
+  function avatarSvg(p, taille) {
+    const pseudo = (p && p.pseudo) || "?";
+    const coul = (p && p.couleur) || COULEURS[0];
+    const rnd = H ? H.alea(pseudo.toLowerCase() + ":" + ((p && p.graine) || 0)) : Math.random;
+    let cases = "";
+    for (let y = 0; y < 5; y++) for (let x = 0; x < 3; x++) {
+      if (rnd() < 0.5) continue;
+      cases += `<rect x="${x + 1}" y="${y + 1}" width="1.02" height="1.02"/>`;
+      if (x < 2) cases += `<rect x="${5 - x}" y="${y + 1}" width="1.02" height="1.02"/>`;
+    }
+    return `<svg width="${taille}" height="${taille}" viewBox="0 0 7 7" aria-hidden="true"><rect width="7" height="7" fill="${coul}" opacity=".16"/><g fill="${coul}">${cases}</g></svg>`;
+  }
+  function majProfilNav() {
+    $("avatarNav").innerHTML = avatarSvg(profil, 32);
+    $("pseudoNav").textContent = profil && profil.pseudo ? profil.pseudo : "Profil";
+  }
+  let brouillon = null;
+  function ouvrirProfil() {
+    brouillon = Object.assign({ pseudo: "", couleur: COULEURS[0], graine: 0 }, profil || {});
+    $("saisiePseudo").value = brouillon.pseudo;
+    $("couleurs").innerHTML = COULEURS.map((c) => `<button type="button" style="background:${c}" data-c="${c}" aria-label="Couleur ${c}" aria-pressed="${c === brouillon.couleur}"></button>`).join("");
+    majApercuAvatar();
+    $("dlgProfil").showModal();
+    $("saisiePseudo").focus();
+  }
+  function majApercuAvatar() { $("avatarApercu").innerHTML = avatarSvg(Object.assign({}, brouillon, { pseudo: $("saisiePseudo").value || "?" }), 72); }
+  $("couleurs").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    brouillon.couleur = b.dataset.c;
+    $("couleurs").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    majApercuAvatar();
+  });
+  $("btnMotif").addEventListener("click", () => { brouillon.graine = (brouillon.graine || 0) + 1; majApercuAvatar(); });
+  $("saisiePseudo").addEventListener("input", majApercuAvatar);
+  $("dlgProfil").addEventListener("close", () => {
+    if ($("dlgProfil").returnValue !== "ok") return;
+    const pseudo = $("saisiePseudo").value.trim().replace(/\s+/g, " ").slice(0, 20);
+    profil = { pseudo, couleur: brouillon.couleur, graine: brouillon.graine };
+    ecrire("profil", profil);
+    // Le poker garde son propre pseudo : on l'aligne sur le profil.
+    try { if (pseudo) localStorage.setItem("poker.pseudo", pseudo); } catch (e) { /* rien */ }
+    majProfilNav();
+    toutRendre();
+    toast(pseudo ? "Profil enregistré, " + pseudo + " !" : "Profil enregistré");
+  });
+  $("btnProfil").addEventListener("click", ouvrirProfil);
+
+  /* =====================================================================
+     Données de progression
+     ===================================================================== */
+  function donnees() {
+    return { j: lire("journal", {}), v: lire("visites", {}), d: lire("defis", {}), e: lire("encours", {}), h: lire("historique", []) };
+  }
+  const cleJour = (dt) => dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+  const aujourdhui = () => cleJour(new Date());
+  const defiReussi = (jour) => !!jour && ((jour.sudoku && jour.sudoku.ok) || (jour.queens && jour.queens.ok));
+  function serie(d) {
+    const dt = new Date();
+    if (!defiReussi(d[cleJour(dt)])) dt.setDate(dt.getDate() - 1);
+    let n = 0;
+    while (defiReussi(d[cleJour(dt)])) { n++; dt.setDate(dt.getDate() - 1); }
+    return n;
+  }
+  function meilleureSerie(d) {
+    const jours = Object.keys(d).filter((k) => defiReussi(d[k])).sort();
+    let best = 0, cur = 0, prec = null;
+    for (const k of jours) {
+      const t = new Date(k + "T12:00:00").getTime();
+      cur = prec && Math.round((t - prec) / 864e5) === 1 ? cur + 1 : 1;
+      best = Math.max(best, cur); prec = t;
+    }
+    return best;
+  }
+  const fiche = (j, id) => j[id] || { parties: 0, victoires: 0, defaites: 0, nulles: 0, records: {}, faits: {} };
+  const fait = (j, id, f) => !!(j[id] && j[id].faits && j[id].faits[f]);
+  const total = (j) => Object.values(j).reduce((s, x) => s + (x.parties || 0), 0);
+
+  /* =====================================================================
+     Succès (calculés à partir du journal : les jeux ne font que raconter)
+     ===================================================================== */
+  const SUCCES = [
+    { id: "profil", m: "🪪", t: "Identité", d: "Créer son profil de joueur.", ok: () => !!(profil && profil.pseudo) },
+    { id: "premiere", m: "🎉", t: "Première partie", d: "Terminer une partie, peu importe le jeu.", ok: (x) => total(x.j) >= 1 },
+    { id: "touche", m: "🧭", t: "Touche-à-tout", d: "Ouvrir 4 jeux différents.", ok: (x) => Object.keys(x.v).filter((k) => PAR_ID[k]).length >= 4 },
+    { id: "tour", m: "🗺️", t: "Grand tour", d: "Ouvrir les 8 jeux de la salle.", ok: (x) => JEUX.every((g) => x.v[g.id]) },
+    { id: "marathon", m: "🏃", t: "Marathonien", d: "50 parties terminées au total.", ok: (x) => total(x.j) >= 50 },
+    { id: "ec-ia", m: "♟️", t: "Échec et mat", d: "Battre l'ordinateur aux échecs.", ok: (x) => fait(x.j, "chess", "bat-ia") },
+    { id: "ec-club", m: "🏅", t: "Joueur de club", d: "Battre l'ordinateur au niveau Club (4) ou plus.", ok: (x) => (fiche(x.j, "chess").records["niveau-ia"] || 0) >= 4 },
+    { id: "ec-expert", m: "👑", t: "Grand maître", d: "Battre l'ordinateur au niveau Expert.", ok: (x) => (fiche(x.j, "chess").records["niveau-ia"] || 0) >= 6 },
+    { id: "ec-ligne", m: "🌐", t: "Par-delà l'écran", d: "Gagner une partie d'échecs en ligne.", ok: (x) => fait(x.j, "chess", "gagne-ligne") },
+    { id: "ec-rapide", m: "⚡", t: "Coup de foudre", d: "Mater en 20 coups ou moins.", ok: (x) => fait(x.j, "chess", "mat-rapide") },
+    { id: "bo-4", m: "🧨", t: "Artificier", d: "Atteindre le niveau 4 de Bomberman.", ok: (x) => (fiche(x.j, "bomberman").records.niveau || 0) >= 4 },
+    { id: "bo-fin", m: "🏆", t: "Démolisseur", d: "Terminer les 8 niveaux de Bomberman.", ok: (x) => fait(x.j, "bomberman", "campagne") },
+    { id: "bo-duel", m: "🤜", t: "Duellistes", d: "Disputer un duel Bomberman jusqu'à la victoire.", ok: (x) => fait(x.j, "bomberman", "duel") },
+    { id: "su-1", m: "🔢", t: "Première grille", d: "Résoudre un sudoku.", ok: (x) => fiche(x.j, "sudoku").victoires >= 1 },
+    { id: "su-expert", m: "🧠", t: "Expert", d: "Résoudre un sudoku Expert ou Extrême.", ok: (x) => fait(x.j, "sudoku", "niveau-3") || fait(x.j, "sudoku", "niveau-4") },
+    { id: "su-parfait", m: "💎", t: "Sans faute", d: "Résoudre un sudoku sans perdre une vie.", ok: (x) => fait(x.j, "sudoku", "sans-faute") },
+    { id: "su-eclair", m: "⏱️", t: "Éclair", d: "Résoudre un sudoku Facile en moins de 5 minutes.", ok: (x) => (fiche(x.j, "sudoku").records["temps-0"] ?? Infinity) < 300 },
+    { id: "qu-1", m: "👸", t: "Couronnée", d: "Résoudre une grille Queens.", ok: (x) => fiche(x.j, "queens").victoires >= 1 },
+    { id: "qu-10", m: "🏰", t: "Royaume", d: "Résoudre un Queens 10×10 sans indice.", ok: (x) => fait(x.j, "queens", "10-sans-indice") },
+    { id: "qu-sprint", m: "🏎️", t: "Sprint royal", d: "Résoudre un Queens 8×8 en moins d'une minute.", ok: (x) => (fiche(x.j, "queens").records["temps-8"] ?? Infinity) < 60000 },
+    { id: "po-table", m: "🃏", t: "Tapis vert", d: "Jouer une main de poker.", ok: (x) => fiche(x.j, "poker").parties >= 1 },
+    { id: "po-pot", m: "💰", t: "Rafle", d: "Remporter un pot au poker.", ok: (x) => fiche(x.j, "poker").victoires >= 1 },
+    { id: "pz-1", m: "🧩", t: "Assemblé", d: "Terminer un puzzle Puzzle Cam.", ok: (x) => fiche(x.j, "puzzle-cam").victoires >= 1 },
+    { id: "pz-5", m: "🪟", t: "Mosaïste", d: "Terminer un puzzle 5×5.", ok: (x) => (fiche(x.j, "puzzle-cam").records.taille || 0) >= 5 },
+    { id: "vi-1000", m: "🧬", t: "Mathusalem", d: "Laisser une simulation atteindre 1 000 générations.", ok: (x) => (fiche(x.j, "jeu-de-la-vie").records.generations || 0) >= 1000 },
+    { id: "de-1", m: "📅", t: "Défi relevé", d: "Réussir un défi du jour.", ok: (x) => Object.values(x.d).some(defiReussi) },
+    { id: "de-double", m: "✌️", t: "Doublé", d: "Réussir le Sudoku et le Queens du même jour.", ok: (x) => Object.values(x.d).some((j) => j.sudoku && j.sudoku.ok && j.queens && j.queens.ok) },
+    { id: "de-3", m: "🔥", t: "Régulier", d: "Réussir le défi 3 jours d'affilée.", ok: (x) => meilleureSerie(x.d) >= 3 },
+    { id: "de-7", m: "🌟", t: "Assidu", d: "Réussir le défi 7 jours d'affilée.", ok: (x) => meilleureSerie(x.d) >= 7 },
+  ];
+
+  /* Retient la date d'obtention ; renvoie les succès nouvellement débloqués. */
+  function evaluerSucces(x) {
+    const obtenus = lire("succes", {}), nouveaux = [];
+    for (const s of SUCCES) if (!obtenus[s.id] && s.ok(x)) { obtenus[s.id] = Date.now(); nouveaux.push(s); }
+    if (nouveaux.length) ecrire("succes", obtenus);
+    return { obtenus, nouveaux };
+  }
+
+  /* =====================================================================
+     Rendu
+     ===================================================================== */
+  function ilYa(t) {
+    const s = (Date.now() - t) / 1000;
+    if (s < 60) return "à l'instant";
+    if (s < 3600) return "il y a " + Math.floor(s / 60) + " min";
+    if (s < 86400) return "il y a " + Math.floor(s / 3600) + " h";
+    const j = Math.floor(s / 86400);
+    return j === 1 ? "hier" : "il y a " + j + " jours";
+  }
+  const accord = (n, u) => n + " " + (n > 1 ? u[1] : u[0]);
+
+  function ligneStat(g, f) {
+    if (g.serveur) return "Parties hébergées sur le serveur du jeu";
+    if (!g.unite) return f.records.generations ? "Record : <b>" + f.records.generations.toLocaleString("fr-FR") + "</b> générations" : "Bac à sable, sans score";
+    if (!f.parties) return "Pas encore joué";
+    const v = g.victoire || ["victoire", "victoires"];
+    return "<b>" + accord(f.parties, g.unite) + "</b> · " + accord(f.victoires, v);
+  }
+
+  function renduChiffres(x, ob) {
+    const joues = JEUX.filter((g) => x.v[g.id] || (x.j[g.id] && x.j[g.id].parties)).length;
+    const vict = Object.values(x.j).reduce((s, f) => s + (f.victoires || 0), 0);
+    $("chiffres").innerHTML = [
+      [JEUX.length, "jeux en ligne"], [joues, "découverts"], [total(x.j), "parties"], [vict, "victoires"],
+      [Object.keys(ob).length + "/" + SUCCES.length, "succès"],
+    ].map(([n, l]) => `<div><b>${n}</b><span>${l}</span></div>`).join("");
+  }
+
+  function renduReprendre(x) {
+    const items = [];
+    for (const [id, info] of Object.entries(x.e)) {
+      if (PAR_ID[id]) items.push({ id, t: info.t, txt: info.libelle || "Partie en cours", suffixe: info.suffixe || "" });
+    }
+    items.sort((a, b) => b.t - a.t);
+    const deja = new Set(items.map((i) => i.id));
+    const recents = Object.entries(x.v).filter(([id]) => PAR_ID[id] && !deja.has(id)).sort((a, b) => b[1] - a[1]);
+    for (const [id, t] of recents) { if (items.length >= 3) break; items.push({ id, t, txt: "Ouvert " + ilYa(t), suffixe: "" }); }
+    $("blocReprendre").hidden = !items.length;
+    $("reprendre").innerHTML = items.slice(0, 3).map((i) => {
+      const g = PAR_ID[i.id];
+      return `<button class="repr" data-jouer="${i.id}" data-suffixe="${esc(i.suffixe)}" data-nav>
+        <span class="ic">${g.icone}</span><span><b>${esc(g.titre)}</b><small>${esc(i.txt)}</small></span><span class="fl">▶</span></button>`;
+    }).join("");
+  }
+
+  function renduDefi(x) {
+    const jour = x.d[aujourdhui()] || {};
+    $("dateDefi").textContent = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    const etat = (el, r, fmt) => {
+      el.className = "etat-defi" + (r ? (r.ok ? " ok" : " ko") : "");
+      el.textContent = !r ? "À faire" : r.ok ? "✓ Réussi · " + fmt(r) : "✗ Raté — vous pouvez retenter";
+    };
+    etat($("etatSudoku"), jour.sudoku, (r) => mmss(r.temps) + " · " + (3 - (r.erreurs || 0)) + " vie" + (3 - (r.erreurs || 0) > 1 ? "s" : ""));
+    etat($("etatQueens"), jour.queens, (r) => mmss(r.temps) + (r.indices ? " · " + r.indices + " indice" + (r.indices > 1 ? "s" : "") : " · sans indice"));
+    document.querySelector('[data-defi="sudoku"]').textContent = jour.sudoku && jour.sudoku.ok ? "Revoir la grille" : "Jouer le défi";
+    document.querySelector('[data-defi="queens"]').textContent = jour.queens && jour.queens.ok ? "Revoir la grille" : "Jouer le défi";
+    const n = serie(x.d);
+    $("serieN").textContent = n;
+    $("serieS").textContent = n > 1 ? "s" : "";
+    let cal = "";
+    for (let k = 13; k >= 0; k--) {
+      const dt = new Date(); dt.setDate(dt.getDate() - k);
+      const jj = x.d[cleJour(dt)];
+      const nb = jj ? (jj.sudoku && jj.sudoku.ok ? 1 : 0) + (jj.queens && jj.queens.ok ? 1 : 0) : 0;
+      cal += `<i class="${nb === 2 ? "ok" : nb === 1 ? "demi" : ""}" title="${cleJour(dt)}"></i>`;
+    }
+    $("calendrier").innerHTML = cal;
+    $("btnPartager").disabled = !defiReussi(jour) && !(jour.sudoku || jour.queens);
+  }
+
+  function texteDefi(x) {
+    const jour = x.d[aujourdhui()] || {};
+    const l = ["Défi du jour dchirez.fr · " + new Date().toLocaleDateString("fr-FR")];
+    const s = jour.sudoku, q = jour.queens;
+    l.push("🔢 Sudoku  " + (!s ? "—" : s.ok ? "✅ " + mmss(s.temps) + "  " + "❤️".repeat(3 - (s.erreurs || 0)) + "🖤".repeat(s.erreurs || 0) : "❌"));
+    l.push("👑 Queens  " + (!q ? "—" : q.ok ? "✅ " + mmss(q.temps) + "  " + (q.indices ? "💡×" + q.indices : "sans indice") : "❌"));
+    const n = serie(x.d);
+    if (n > 1) l.push("🔥 Série : " + n + " jours");
+    l.push("https://dchirez.fr/games/#defi");
+    return l.join("\n");
+  }
+  $("btnPartager").addEventListener("click", () => partager(texteDefi(donnees()), "Défi du jour"));
+
+  let filtre = "tous";
+  function renduGrille(x) {
+    const q = $("recherche").value.trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const liste = JEUX.filter((g) => (filtre === "tous" || g.tags.includes(filtre)) &&
+      (!q || (g.titre + " " + g.desc + " " + g.tags.map((t) => LIB_TAG[t]).join(" ")).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").includes(q)));
+    $("grille").innerHTML = liste.length ? liste.map((g) => {
+      const f = fiche(x.j, g.id);
+      const recs = g.records ? g.records(f.records) : [];
+      const enCours = x.e[g.id];
+      return `<article class="carte-jeu" data-id="${g.id}">
+        <div class="apercu"><div class="capture"><img src="apercus/${g.id}.webp" alt="Capture d'écran : ${esc(g.titre)} en cours de partie" width="640" height="360" loading="lazy" decoding="async"></div><span class="icone" aria-hidden="true">${g.icone}</span>
+          ${enCours ? '<span class="marque badge badge-sm badge-accent">en cours</span>' : g.serveur ? '<span class="marque badge badge-sm badge-neutral">serveur dédié</span>' : g.webcam ? '<span class="marque badge badge-sm badge-neutral">webcam</span>' : ""}</div>
+        <div class="corps">
+          <h3>${esc(g.titre)}</h3>
+          <p>${esc(g.desc)}</p>
+          <div class="tags">${g.tags.map((t) => `<span class="badge badge-sm ${t === "ligne" ? "badge-violet" : "badge-neutral"}">${LIB_TAG[t]}</span>`).join("")}</div>
+          <div class="stat-jeu">${ligneStat(g, f)}${recs.length ? "<br>" + esc(recs.slice(0, 2).join(" · ")) : ""}</div>
+          <div class="actions-jeu">
+            <button class="btn btn-primary btn-sm btn-jouer" data-jouer="${g.id}" data-nav>${enCours ? "Reprendre" : "Jouer"}</button>
+            <a class="btn btn-secondary btn-sm" href="https://github.com/Dchirez/${g.id === "risk-online" ? "risk-online" : g.id}" target="_blank" rel="noopener" title="Code source sur GitHub">Code</a>
+          </div>
+        </div></article>`;
+    }).join("") : `<div class="vide">Aucun jeu ne correspond. <button class="btn btn-ghost btn-sm" id="raz">Tout afficher</button></div>`;
+    const raz = $("raz");
+    if (raz) raz.onclick = () => { $("recherche").value = ""; choisirFiltre("tous"); };
+  }
+  function choisirFiltre(f) {
+    filtre = f;
+    document.querySelectorAll(".fchip").forEach((c) => c.setAttribute("aria-pressed", String(c.dataset.filtre === f)));
+    renduGrille(donnees());
+  }
+  document.querySelectorAll(".fchip").forEach((c) => c.addEventListener("click", () => choisirFiltre(c.dataset.filtre)));
+  $("recherche").addEventListener("input", () => renduGrille(donnees()));
+
+  function renduStats(x) {
+    const lignes = JEUX.filter((g) => !g.serveur).map((g) => {
+      const f = fiche(x.j, g.id);
+      const recs = g.records ? g.records(f.records) : [];
+      const der = f.dernier || x.v[g.id];
+      return `<tr><td>${g.icone} ${esc(g.titre)}</td>
+        <td class="num">${g.unite ? f.parties : "—"}</td><td class="num">${g.unite ? f.victoires : "—"}</td>
+        <td><span class="rec">${recs.length ? esc(recs.join(" · ")) : "—"}</span></td>
+        <td class="num"><span class="rec">${der ? ilYa(der) : "jamais"}</span></td></tr>`;
+    }).join("");
+    $("tableau").innerHTML = `<thead><tr><th>Jeu</th><th class="num">Parties</th><th class="num">Gagnées</th><th>Records</th><th class="num">Dernière fois</th></tr></thead><tbody>${lignes}</tbody>`;
+    const ISSUE = { victoire: "Victoire", defaite: "Défaite", nulle: "Nulle", fin: "Terminé" };
+    $("activite").innerHTML = x.h.length ? x.h.slice(0, 25).map((e) => {
+      const g = PAR_ID[e.jeu]; if (!g) return "";
+      return `<li class="${e.issue}"><span class="pastille"></span><span>${g.icone} <b style="color:var(--text-strong)">${esc(g.titre)}</b> — ${esc(e.detail || ISSUE[e.issue] || "")}</span><time>${ilYa(e.t)}</time></li>`;
+    }).join("") : '<li style="border:0;color:var(--text-muted)">Rien pour l\'instant. Lancez une partie !</li>';
+  }
+
+  function renduSucces(ob) {
+    const n = Object.keys(ob).length;
+    $("succesResume").textContent = n + " sur " + SUCCES.length + " débloqués";
+    $("succesBarre").style.width = (100 * n / SUCCES.length) + "%";
+    const tri = SUCCES.slice().sort((a, b) => (ob[b.id] ? 1 : 0) - (ob[a.id] ? 1 : 0));
+    $("listeSucces").innerHTML = tri.map((s) => `<div class="badge-succes${ob[s.id] ? " obtenu" : ""}" title="${ob[s.id] ? "Obtenu le " + new Date(ob[s.id]).toLocaleDateString("fr-FR") : "À débloquer"}">
+      <span class="med" aria-hidden="true">${s.m}</span><span><b>${esc(s.t)}</b><small>${esc(s.d)}</small></span>
+      <span class="sr">${ob[s.id] ? "obtenu" : "non obtenu"}</span></div>`).join("");
+  }
+
+  function renduHors() {
+    $("listeHors").innerHTML = HORS.map((h) => {
+      const contenu = `<span class="ic">${h.icone}</span><span><b>${esc(h.titre)}</b><small>${esc(h.desc)}</small><small><code>${esc(h.info)}</code></small></span>`;
+      return h.url ? `<a href="${h.url}" target="_blank" rel="noopener" data-nav>${contenu}</a>`
+                   : `<a href="../#projets" data-nav>${contenu}</a>`;
+    }).join("");
+  }
+
+  function toutRendre(premier) {
+    const x = donnees();
+    const { obtenus, nouveaux } = evaluerSucces(x);
+    renduChiffres(x, obtenus);
+    renduReprendre(x);
+    renduDefi(x);
+    renduGrille(x);
+    renduStats(x);
+    renduSucces(obtenus);
+    nouveaux.forEach((s, i) => setTimeout(() => toast(s.m + " Succès débloqué : " + s.t), (premier ? 600 : 0) + i * 2600));
+  }
+
+  /* Un jeu ouvert dans le hub (ou dans un autre onglet) écrit dans le localStorage :
+     l'événement storage nous prévient, la salle se met à jour d'elle-même. */
+  let rafraichir = null;
+  addEventListener("storage", (e) => {
+    if (!e.key || !e.key.startsWith(P)) return;
+    clearTimeout(rafraichir);
+    rafraichir = setTimeout(() => toutRendre(false), 150);
+  });
+
+  /* =====================================================================
+     Lancer un jeu
+     ===================================================================== */
+  function url(id, suffixe) { return "../" + id + "/" + (suffixe || ""); }
+
+  function jouer(id, suffixe) {
+    const g = PAR_ID[id]; if (!g) return;
+    const v = lire("visites", {}); v[id] = Date.now(); ecrire("visites", v);
+    if (reglages.ouverture === "onglet") { location.href = url(id, suffixe); return; }
+    ouvrirLecteur(id, suffixe, true);
+  }
+
+  let jeuOuvert = null, focusAvant = null;
+  function ouvrirLecteur(id, suffixe, empiler) {
+    const g = PAR_ID[id];
+    jeuOuvert = id;
+    focusAvant = document.activeElement;
+    $("lecteurIcone").textContent = g.icone;
+    $("lecteurTitre").textContent = g.titre;
+    $("lecteurOnglet").href = url(id, suffixe);
+    $("cadre").title = g.titre;
+    $("cadre").src = url(id, suffixe);
+    $("lecteur").hidden = false;
+    document.body.style.overflow = "hidden";
+    document.title = g.titre + " — Salle de jeux";
+    if (empiler) history.pushState({ jeu: id, suffixe }, "", "#jouer=" + id + (suffixe ? "&s=" + encodeURIComponent(suffixe) : ""));
+    $("cadre").focus();
+  }
+  function fermerLecteur(depuisHistorique) {
+    if (!jeuOuvert) return;
+    jeuOuvert = null;
+    $("lecteur").hidden = true;
+    $("cadre").src = "about:blank";
+    document.body.style.overflow = "";
+    document.title = "Salle de jeux — dchirez.fr";
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    if (!depuisHistorique) history.back();
+    toutRendre(false);
+    if (focusAvant && focusAvant.isConnected) focusAvant.focus();
+  }
+  $("lecteurRetour").addEventListener("click", () => fermerLecteur(false));
+  $("lecteurPlein").addEventListener("click", () => {
+    const el = $("cadre");
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  });
+  /* Le jeu (même origine) garde le focus clavier : on écoute aussi Échap dans le cadre,
+     sauf quand le jeu s'en sert lui-même (pause de Bomberman, fermeture de boîtes). */
+  $("cadre").addEventListener("load", () => {
+    try {
+      $("cadre").contentWindow.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && e.shiftKey) { e.preventDefault(); fermerLecteur(false); }
+      });
+    } catch (err) { /* page d'une autre origine : rien */ }
+  });
+  addEventListener("popstate", (e) => {
+    const s = e.state;
+    if (s && s.jeu) { if (jeuOuvert !== s.jeu) ouvrirLecteur(s.jeu, s.suffixe, false); }
+    else fermerLecteur(true);
+  });
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-jouer]");
+    if (b) { jouer(b.dataset.jouer, b.dataset.suffixe || ""); return; }
+    const d = e.target.closest("[data-defi]");
+    if (d) jouer(d.dataset.defi, "#defi");
+  });
+
+  function auHasard() {
+    const dispo = JEUX.filter((g) => !g.webcam);   // pas de surprise qui réclame la caméra
+    const recent = lire("visites", {});
+    const derniers = Object.entries(recent).sort((a, b) => b[1] - a[1]).map((x) => x[0])[0];
+    const choix = dispo.filter((g) => g.id !== derniers);
+    const g = choix[Math.floor(Math.random() * choix.length)];
+    toast("🎲 Au hasard : " + g.titre);
+    setTimeout(() => jouer(g.id), 450);
+  }
+  $("btnHasard").addEventListener("click", auHasard);
+  $("btnHasard2").addEventListener("click", auHasard);
+
+  /* =====================================================================
+     Salon en ligne
+     ===================================================================== */
+  const ALPHA_EC = "abcdefghjkmnpqrstuvwxyz23456789", ALPHA_PO = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  function code(alpha, n) {
+    const t = new Uint8Array(n); crypto.getRandomValues(t);
+    return Array.from(t, (x) => alpha[x % alpha.length]).join("");
+  }
+  const absolu = (rel) => new URL(rel, location.href).href;
+
+  let qrPret = null;
+  function chargerQr() {
+    if (qrPret) return qrPret;
+    qrPret = new Promise((ok, ko) => {
+      if (window.qrcode) return ok();
+      const s = document.createElement("script");
+      s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
+      s.onload = () => ok(); s.onerror = () => { qrPret = null; ko(); };
+      document.head.appendChild(s);
+    });
+    return qrPret;
+  }
+  async function qrDans(el, lien) {
+    try {
+      await chargerQr();
+      const q = window.qrcode(0, "M"); q.addData(lien); q.make();
+      el.innerHTML = q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    } catch (e) { el.innerHTML = '<span style="color:#71717a;font-size:12px;text-align:center">QR indisponible hors ligne</span>'; }
+  }
+  function afficherInvitation(el, codeTxt, lien, ouvrir, note) {
+    el.hidden = false;
+    el.innerHTML = `<div class="qr" aria-label="QR code du lien d'invitation"></div>
+      <div class="inv-texte"><div class="code">${esc(codeTxt)}</div><small>${esc(lien)}</small>
+      ${note ? `<small style="margin-top:6px">${esc(note)}</small>` : ""}
+      <div class="rangee"><button class="btn btn-secondary btn-sm" data-act="copier">Copier le lien</button>
+      ${navigator.share ? '<button class="btn btn-secondary btn-sm" data-act="partager">Partager</button>' : ""}
+      <button class="btn btn-primary btn-sm" data-act="ouvrir">Ouvrir la partie</button></div></div>`;
+    qrDans(el.querySelector(".qr"), lien);
+    el.querySelector('[data-act="copier"]').onclick = () => copier(lien, "Lien copié");
+    const p = el.querySelector('[data-act="partager"]');
+    if (p) p.onclick = () => navigator.share({ title: "Une partie ?", url: lien }).catch(() => {});
+    el.querySelector('[data-act="ouvrir"]').onclick = ouvrir;
+  }
+
+  $("creerEchecs").addEventListener("click", () => {
+    const c = code(ALPHA_EC, 8);
+    // L'hôte s'ouvre avec #s=<code> : les échecs créent la salle avec ces options.
+    const opts = "&c=" + $("ecCouleur").value + "&tc=" + encodeURIComponent($("ecCadence").value);
+    const suffixe = "#s=" + c + opts;
+    afficherInvitation($("invEchecs"), c, absolu(url("chess", "#j=" + c)), () => jouer("chess", suffixe),
+      "La partie démarre quand vous l'ouvrez : gardez-la ouverte jusqu'à l'arrivée de votre adversaire.");
+  });
+  $("creerPoker").addEventListener("click", () => {
+    const c = code(ALPHA_PO, 5);
+    afficherInvitation($("invPoker"), c, absolu(url("poker", "?table=" + c)), () => jouer("poker", "?creer=" + c),
+      "La table s'ouvre avec ce code. S'il était déjà pris, la table en affiche un autre.");
+  });
+  $("rjJeu").addEventListener("change", () => { $("rjCode").placeholder = $("rjJeu").value === "poker" ? "ex. K7M2Q" : "ex. k7m2qx9a"; });
+  function rejoindre() {
+    const jeu = $("rjJeu").value;
+    let c = $("rjCode").value.trim();
+    // On accepte aussi un lien complet collé tel quel.
+    const m = /[#?&](?:j|table)=([A-Za-z0-9]+)/.exec(c); if (m) c = m[1];
+    if (jeu === "poker") {
+      c = c.toUpperCase();
+      if (!/^[A-Z0-9]{5}$/.test(c)) return toast("Un code de table de poker fait 5 caractères");
+      jouer("poker", "?table=" + c);
+    } else {
+      c = c.toLowerCase();
+      if (!/^[a-z0-9]{4,16}$/.test(c)) return toast("Code de partie d'échecs invalide");
+      jouer("chess", "#j=" + c);
+    }
+  }
+  $("btnRejoindre").addEventListener("click", rejoindre);
+  $("rjCode").addEventListener("keydown", (e) => { if (e.key === "Enter") rejoindre(); });
+
+  /* =====================================================================
+     Outils
+     ===================================================================== */
+  let toastId = null;
+  function toast(txt) {
+    const t = $("toast"); t.textContent = txt; t.classList.add("vu");
+    clearTimeout(toastId); toastId = setTimeout(() => t.classList.remove("vu"), 2400);
+  }
+  function copier(txt, ok) {
+    (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+      .then(() => toast(ok)).catch(() => { prompt("Copiez :", txt); });
+  }
+  function partager(txt, titre) {
+    if (navigator.share && matchMedia("(pointer: coarse)").matches) navigator.share({ title: titre, text: txt }).catch(() => {});
+    else copier(txt, "Résultat copié, à coller où vous voulez");
+  }
+
+  $("btnExporter").addEventListener("click", () => {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(P)) data[k] = localStorage.getItem(k); }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = "salle-de-jeux-" + aujourdhui() + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $("btnEffacer").addEventListener("click", () => {
+    if (!confirm("Effacer statistiques, succès, défis et profil ? Les jeux gardent leurs propres réglages.")) return;
+    const cles = [];
+    for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith(P) && k !== P + "reglages") cles.push(k); }
+    cles.forEach((k) => localStorage.removeItem(k));
+    profil = null; majProfilNav(); toutRendre(false);
+    $("dlgReglages").close();
+    toast("Progression effacée");
+  });
+  $("btnReglages").addEventListener("click", () => { majSegments(); etatHorsLigne(); $("dlgReglages").showModal(); });
+
+  /* =====================================================================
+     Hors ligne : le hub et les jeux solo se mettent en cache
+     ===================================================================== */
+  const HORS_LIGNE = ["sudoku", "queens", "bomberman", "jeu-de-la-vie", "chess"];
+  async function etatHorsLigne() {
+    const el = $("etatHorsLigne");
+    if (!("serviceWorker" in navigator)) { el.textContent = "Mode hors ligne indisponible dans ce navigateur."; return; }
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const prets = HORS_LIGNE.filter((id) => regs.some((r) => r.scope.endsWith("/" + id + "/")));
+    el.textContent = "Hors ligne : " + (prets.length ? prets.map((id) => PAR_ID[id].titre).join(", ") + " " + (prets.length > 1 ? "sont prêts" : "est prêt") : "aucun jeu encore en cache") + ". Le hub s'installe comme une application depuis le menu du navigateur.";
+  }
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+      // Chaque jeu solo a son propre service worker : on les installe d'avance,
+      // pour que le jeu soit jouable hors connexion avant même sa première ouverture.
+      for (const id of HORS_LIGNE) navigator.serviceWorker.register("../" + id + "/sw.js", { scope: "../" + id + "/" }).catch(() => {});
+    });
+  }
+
+  /* =====================================================================
+     Navigation au clavier et à la manette (navigation spatiale)
+     ===================================================================== */
+  function navigables() {
+    const racine = document.querySelector("dialog[open]") || document;
+    return Array.from(racine.querySelectorAll("[data-nav], .carte-jeu .btn-jouer, .fchip")).filter((el) => el.offsetParent !== null && !el.disabled);
+  }
+  function deplacer(dx, dy) {
+    const items = navigables(); if (!items.length) return;
+    const cur = document.activeElement;
+    if (!items.includes(cur)) { items[0].focus(); items[0].scrollIntoView({ block: "center", behavior: "smooth" }); return; }
+    const a = cur.getBoundingClientRect(), ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    let best = null, bs = Infinity;
+    for (const el of items) {
+      if (el === cur) continue;
+      const b = el.getBoundingClientRect(), bx = b.left + b.width / 2, by = b.top + b.height / 2;
+      const px = bx - ax, py = by - ay;
+      const avance = dx ? px * dx : py * dy, ecart = dx ? Math.abs(py) : Math.abs(px);
+      if (avance <= 4) continue;
+      const score = avance + ecart * 2.2;
+      if (score < bs) { bs = score; best = el; }
+    }
+    if (best) { best.focus(); best.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
+  }
+  document.addEventListener("keydown", (e) => {
+    if (jeuOuvert) { if (e.key === "Escape") fermerLecteur(false); return; }
+    const t = e.target;
+    if (t.matches("input, select, textarea")) return;
+    const dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (dir && (t === document.body || navigables().includes(t))) { e.preventDefault(); deplacer(dir[0], dir[1]); }
+  });
+
+  /* Manette : boutons standard (A=0, B=1, Y=3, croix 12-15, stick gauche). */
+  let manetteRaf = null, precedents = {}, repetition = 0;
+  function sonderManette(now) {
+    manetteRaf = requestAnimationFrame(sonderManette);
+    const pads = navigator.getGamepads ? Array.from(navigator.getGamepads()).filter(Boolean) : [];
+    if (!pads.length) return;
+    const p = pads[0], b = (i) => !!(p.buttons[i] && p.buttons[i].pressed);
+    const ax = p.axes[0] || 0, ay = p.axes[1] || 0;
+    const etat = { A: b(0), B: b(1), Y: b(3), G: b(14) || ax < -.6, D: b(15) || ax > .6, H: b(12) || ay < -.6, Ba: b(13) || ay > .6 };
+    const front = (k) => etat[k] && !precedents[k];
+    const dirs = [["G", -1, 0], ["D", 1, 0], ["H", 0, -1], ["Ba", 0, 1]];
+    for (const [k, dx, dy] of dirs) {
+      if (front(k)) { deplacer(dx, dy); repetition = now + 380; }
+      else if (etat[k] && now > repetition && !jeuOuvert) { deplacer(dx, dy); repetition = now + 130; }
+    }
+    if (!jeuOuvert) {
+      if (front("A") && document.activeElement && document.activeElement !== document.body) document.activeElement.click();
+      if (front("Y")) auHasard();
+      if (front("B")) { const d = document.querySelector("dialog[open]"); if (d) d.close(); }
+    } else if (front("B") && p.buttons[8] && p.buttons[8].pressed) fermerLecteur(false);   // Select + B : retour au hub
+    precedents = etat;
+  }
+  addEventListener("gamepadconnected", () => {
+    $("indicManette").hidden = false;
+    setTimeout(() => { $("indicManette").hidden = true; }, 5000);
+    if (!manetteRaf) manetteRaf = requestAnimationFrame(sonderManette);
+  });
+  addEventListener("gamepaddisconnected", () => {
+    if (!navigator.getGamepads || !Array.from(navigator.getGamepads()).some(Boolean)) { cancelAnimationFrame(manetteRaf); manetteRaf = null; }
+  });
+
+  /* =====================================================================
+     Démarrage
+     ===================================================================== */
+  appliquerTheme();
+  majProfilNav();
+  renduHors();
+  toutRendre(true);
+  // Lien direct vers un jeu dans le hub : #jouer=sudoku&s=%23defi
+  const m = /^#jouer=([a-z-]+)(?:&s=(.*))?$/.exec(location.hash);
+  if (m && PAR_ID[m[1]]) {
+    const suffixe = m[2] ? decodeURIComponent(m[2]) : "";
+    history.replaceState(null, "", location.pathname);
+    history.pushState({ jeu: m[1], suffixe }, "", "#jouer=" + m[1] + (m[2] ? "&s=" + m[2] : ""));
+    ouvrirLecteur(m[1], suffixe, false);
+  }
+})();
+</script>
+</body>
+</html>
